@@ -40,10 +40,10 @@ const keypressHandler = (str, k) => {
     }
 };
 
-// Function to get the next key from the buffer, waits for 10ms if a key has been pressed
+// Function to get the next key from the buffer, waits for 1ms if a key has been pressed
 async function getNextKey() {
     if (keyBuffer.length > 0) {
-        await new Promise(resolve => setTimeout(resolve, 10));
+//        await new Promise(resolve => setTimeout(resolve, 1));
         return keyBuffer.shift();
     } else {
         return NOKEY;
