@@ -70,13 +70,13 @@ void handle_keypress(int sig) {
 
         // Check for CTRL-C and set the flag if detected. The flag is read by the 
         // subleq program to check if CTRL-C was pressed. 
-        // If pressed 5 times in a row, the subleq interpreter exits to shell/monitor
+        // If pressed 3 times in a row, the subleq interpreter exits to shell/monitor
         if (c==3) {
             ctrlc=1;
             keypressBuffer.head=0;
             keypressBuffer.tail=0;
             cnt++;
-            if (cnt>5) die=true; 
+            if (cnt>2) die=true; 
         } else cnt=0;
         
         int next = (keypressBuffer.head + 1) % RING_BUFFER_SIZE;
