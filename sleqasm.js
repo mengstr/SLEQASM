@@ -35,7 +35,6 @@ G.pass=1;                   // First pass
 G.localNo=1000;
 ProcessFile(argFile,0);       
 
-// console.table(G.symbols);
 
 G.pass=2;                    // Second pass
 G.localNo=1000;
@@ -53,6 +52,7 @@ fs.closeSync(fdV20RawFile);
 
 function ProcessFile(argFile, listFile) {
     logger.info(`Running pass ${G.pass}`);
+
     openFileAndPushToStack(argFile);
 
     // Set the program counter to 0, also adds it to the symbol table as $ if not there already
@@ -89,6 +89,7 @@ function ProcessLine(originalLine, listFile) {
     const MAXDATADUMP = 3;
 
     logger.debug(`${G.procName}>>>${originalLine}`);
+    let originalLine2=originalLine;
 
     // If we're in defining a macro, add the line to the macro
     if (G.macroname!='') {
@@ -152,8 +153,15 @@ function ProcessLine(originalLine, listFile) {
 
     // if the first token is in the macro table, expand the macro
     if (G.macros.has(A)) {
-    //    console.log(`Expanding macro ${A} which have ${G.macros.get(A).params} as parameters`);
-    //    console.log(`A=${A} B=${B} C=${C} D=${D} E=${E} F=${F}`)
+
+        if (listFile > 0) {
+            fs.writeSync(listFile, `${pcAtLineStart.toString(16).padStart(6, '0')}:                     ;**************\n`);
+            fs.writeSync(listFile, `${pcAtLineStart.toString(16).padStart(6, '0')}:                     ${originalLine2}\n`);
+            fs.writeSync(listFile, `${pcAtLineStart.toString(16).padStart(6, '0')}:                     ;**************\n`);
+        }
+    
+        //    console.log(`Expanding macro ${A} which have ${G.macros.get(A).params} as parameters`);
+        //    console.log(`A=${A} B=${B} C=${C} D=${D} E=${E} F=${F}`)
         B=fixLocalLabel(B);
         C=fixLocalLabel(C);
         D=fixLocalLabel(D);
@@ -246,6 +254,7 @@ function HandleDirective(line, label, pass) {
 
 //    logger.debug(`Directive='${directive}' with argument='${args}'`);
     let vals=[];
+    let value;
 
     switch (directive.toLowerCase()) {
         //
@@ -296,7 +305,7 @@ function HandleDirective(line, label, pass) {
         // .ORG directive - set the program counter to the value of the expression
         //
         case '.org':
-            let value;
+//            let value;
             [line, value]=getExpression(args);
             try {
                 setPC(Evaluate(value));
@@ -309,6 +318,7 @@ function HandleDirective(line, label, pass) {
         // .EQU directive - define a symbol with the value of the expression
         //
         case '.equ':
+  //          let value;
             [line, value]=getExpression(args);
             // try {
             G.symbols.set(label, Evaluate(value));
