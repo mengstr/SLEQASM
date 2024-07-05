@@ -144,20 +144,49 @@ int main(int argc, char *argv[]) {
     }
 
     fclose(file);
+    // printf("Loaded %d instructions.\n", i);
 
     set_raw_mode();    // Set terminal to raw mode
     setup_async_keypress();    // Set up asynchronous keypress handling
 
-
-//    printf("Loaded %d instructions.\n", i);
+    for (int i=0; i<256; i++) code[0x600000+i]=i;
 
     int pc = 0;
     int32_t a, b, c;
     ctrlc=0;
     while (!die) {
+        if (pc>=0x1000000) {
+            printf("\r\n[pc] Out of bounds error. Exiting.\r\n");
+            break;
+        }
         a = code[pc];
         b = code[pc + 1];
         c = code[pc + 2];
+
+        // printf("PC: %06X A: %X (%d) B: %X (%d) C: %X (%d)\r\n", pc, a,a, b,b, c,c);
+        // fflush(stdout);
+
+
+        if (a>=0x1000000) {
+        fflush(stdout);
+            printf("\r\n[a]Out of bounds error. Exiting.\r\n");
+        fflush(stdout);
+            exit(1);
+        }
+        if (b>=0x1000000) {
+        fflush(stdout);
+            printf("\r\n[b]Out of bounds error. Exiting.\r\n");
+        fflush(stdout);
+            exit(1);
+        }
+        if (pc>=0x1000000) {
+        fflush(stdout);
+            printf("\r\n[c]Out of bounds error. Exiting.\r\n");
+        fflush(stdout);
+            exit(1);
+        }
+
+
 
         if (b==0xffffff) {      // -1 Write to console
             write(STDOUT_FILENO, &code[a], 1); // Write the character to stdou  t
@@ -183,13 +212,31 @@ int main(int argc, char *argv[]) {
         }
 
 
+        if (a<0) {
+        fflush(stdout);
+            printf("\r\n[a] Negative error. Exiting.\r\n");
+        fflush(stdout);
+            exit(1);
+        }
+
+        if (b<0) {
+        fflush(stdout);
+            printf("\r\n[b] Negative error. Exiting.\r\n");
+        fflush(stdout);
+            exit(1);
+        }
+
+
         // Perform subtraction and ensure result wraps within 24-bit signed integer range
         int32_t result = (code[b] - code[a]) & 0xFFFFFF;
         if (result & 0x800000) result = -(0x1000000 - result);
-        code[b] = result;
+        if (b<0x600000) code[b] = result;
 
         if (code[b] <= 0) {
-        if (c==0xffffff) { printf("\r\nHALT\r\n"); break;}
+            if (c==0xffffff) { 
+                // printf("\r\nHALT\r\n"); 
+                break;
+                }
             pc = c;
         } else {
             pc += 3;
@@ -197,7 +244,7 @@ int main(int argc, char *argv[]) {
     }
     
     reset_terminal_mode();
-    printf("\r\nExiting the subleq interpreter.\r\n");
+    // printf("\r\nExiting the subleq interpreter.\r\n");
     return 0;
 }
 
