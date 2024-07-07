@@ -78,7 +78,31 @@ void handle_keypress(int sig) {
             cnt++;
             if (cnt>2) die=true; 
         } else cnt=0;
-        
+
+        if (c==4) { // Dump memory from 0x00BE00 to 0x00c000 formatted as a normal hexdump.
+            printf("\r\n");
+            for (int i=0x00ba00; i<0x00bb00; i+=16) {
+                printf("%06X: ", i);
+                fflush(stdout);
+                for (int j=0; j<16; j++) {
+                    printf("%06X ", code[i+j]);
+                fflush(stdout);
+                }
+                printf(" ");
+                fflush(stdout);
+                for (int j=0; j<16; j++) {
+                    char ch = code[i+j];
+                    if (ch>31 && ch<127) printf("%c", ch);
+                    else printf(".");
+                fflush(stdout);
+                }
+                printf("\r\n");
+                fflush(stdout);
+             }
+                fflush(stdout);
+        }
+
+
         int next = (keypressBuffer.head + 1) % RING_BUFFER_SIZE;
         keypressBuffer.buffer[keypressBuffer.head] = c;
         keypressBuffer.head = next;
@@ -114,10 +138,14 @@ void setup_async_keypress() {
 int main(int argc, char *argv[]) {
     FILE *file;
     char* filename;
+    bool trace = false;
+    
     if (argc < 2) {
         printf("Usage: %s <filename>\n", argv[0]);
         return 1;
     }
+
+    if (argc==3) trace=true;
 
     filename = argv[1];
     uint32_t i = 0;
@@ -156,15 +184,19 @@ int main(int argc, char *argv[]) {
     ctrlc=0;
     while (!die) {
         if (pc>=0x1000000) {
+            fflush(stdout);
             printf("\r\n[pc] Out of bounds error. Exiting.\r\n");
+            fflush(stdout);
             break;
         }
         a = code[pc];
         b = code[pc + 1];
         c = code[pc + 2];
 
-        // printf("PC: %06X A: %X (%d) B: %X (%d) C: %X (%d)\r\n", pc, a,a, b,b, c,c);
-        // fflush(stdout);
+        if (trace) {
+            printf("PC: %06X A: %X (%d) B: %X (%d) C: %X (%d)\r\n", pc, a,a, b,b, c,c);
+            fflush(stdout);
+        }
 
 
         if (a>=0x1000000) {
